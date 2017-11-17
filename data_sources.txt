@@ -1,0 +1,15 @@
+Social Circles: twitter.tar.gz, twitter_combined.txt.gz
+    from https://snap.stanford.edu/data/egonets-Twitter.html [McAuley & Leskovec, NIPS 2012]
+
+Raw Social Graph: twitter_rv.tar.gz
+    from http://an.kaist.ac.kr/traces/WWW2010.html [Kwak et. al., WWW 2010]
+
+Smaller social graph for easier analysis: twitter_rv_first_million_users.net
+    Subgraph of ids <1MM derived from twitter_rv.net with the following:
+    $ cat twitter_rv.net | egrep -v '[0-9]{7}' > twitter_rv_first_million_users.net
+    Contains 39k unique user ids, 904k edges
+
+Raw Tweets: ?.gz
+    from https://snap.stanford.edu/data/twitter7.html [Yang & Leskovec, WSDM 2011]
+    Data removed from SNAP
+
