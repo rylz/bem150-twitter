@@ -24,6 +24,14 @@ print('Average in-degree:', numpy.average(in_degree))
 print('Median in-degree:', numpy.median(in_degree))
 print('Average out-degree:', numpy.average(out_degree))
 print('Median out-degree:', numpy.median(out_degree))
+# print most central users in reverse order
+centrality = [(k, v) for k, v in nx.out_degree_centrality(g).items()]
+centrality.sort(key=lambda t: t[1], reverse=True)
+print('Most central users by in-degree centrality', [uid for uid, _ in centrality[:10]])
+# NB: betweenness centrality takes exponential time to compute
+centrality = [(k, v) for k, v in nx.betweenness_centrality(g).items()]
+centrality.sort(key=lambda t: t[1], reverse=True)
+print('Most central users by betweenness centrality', [uid for uid, _ in centrality[:10]])
 
 # plotting degree distributions
 
