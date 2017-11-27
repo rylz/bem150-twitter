@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import argparse
+import json
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy
@@ -9,12 +10,18 @@ import os.path
 # Command line parameters
 parser = argparse.ArgumentParser(description='Basic analysis for a graph given in CSV format')
 parser.add_argument('--summary', dest='summary', action='store_true', default=False)
-parser.add_argument('--centrality', dest='centrality', action='store_true', default=False)
+parser.add_argument('--centrality', dest='centrality', action='store', type=str)
 parser.add_argument('--degreedist', dest='degreedist', action='store_true', default=False)
 parser.add_argument('--verbose', dest='verbose', action='store_true', default=False)
+parser.add_argument('--json', dest='json', action='store_true', default=False)
 parser.add_argument('--nnodes', dest='nnodes', action='store', default=10, type=int)
+parser.add_argument('--influencerclusterdist', action='store', default=0, type=int)
 parser.add_argument('filename', nargs=1)
 args = parser.parse_args()
+
+# ensure output selection is mutually exclusive
+OUTPUT_VERBOSE = args.verbose
+OUTPUT_JSON = not args.verbose and args.json
 
 # argument to the script is a path to an adjacency list
 g = nx.read_adjlist(args.filename[0], create_using=nx.DiGraph())
@@ -36,19 +43,46 @@ if args.summary:
     print('Average out-degree:', numpy.average(out_degree))
     print('Median out-degree:', numpy.median(out_degree))
 
-if args.centrality:
+centrality = []
+central_users = []
+if args.centrality == 'degree':
     # print most central users in reverse order
     centrality = [(k, v) for k, v in nx.out_degree_centrality(g).items()]
     centrality.sort(key=lambda t: t[1], reverse=True)
-    if args.verbose:
+    central_users = [uid for uid, _ in centrality[:args.nnodes]]
+    if OUTPUT_VERBOSE:
         print('Most central users by in-degree centrality')
-    for uid, _ in centrality[:args.nnodes]:
-        print(uid)
+    if not OUTPUT_JSON:
+        for uid in central_users:
+            print(uid)
 
+if args.centrality == 'betweenness':
     # NB: betweenness centrality takes exponential time to compute
-    # centrality = [(k, v) for k, v in nx.betweenness_centrality(g).items()]
-    # centrality.sort(key=lambda t: t[1], reverse=True)
-    # print('Most central users by betweenness centrality', [uid for uid, _ in centrality[:10]])
+    centrality = [(k, v) for k, v in nx.betweenness_centrality(g).items()]
+    centrality.sort(key=lambda t: t[1], reverse=True)
+    central_users = [uid for uid, _ in centrality[:args.nnodes]]
+    if OUTPUT_VERBOSE:
+        print('Most central users by betweenness centrality')
+    if not OUTPUT_JSON:
+        for uid in central_users:
+            print(uid)
+
+if args.influencerclusterdist != 0:
+    # note: depends on output of centrality above
+    clusters = [set([influencer]) for influencer in central_users]
+    for _ in range(args.influencerclusterdist):
+        for cluster in clusters:
+            # iterate on a static list rather than the set which changes in the loop body
+            current_cluster = list(cluster)
+            for influencer in current_cluster:
+                cluster.update(g.neighbors(influencer))
+    if OUTPUT_VERBOSE:
+        print(f'Influencer clusters of degree {args.influencerclusterdist}: ')
+        for i, influencer in enumerate(central_users):
+            print('{} ({}): {}'.format(influencer, len(clusters[i]), ' '.join(clusters[i])))
+    elif OUTPUT_JSON:
+        print(json.dumps(
+            {influencer: list(clusters[i]) for i, influencer in enumerate(central_users)}))
 
 if args.degreedist:
     # plotting degree distributions
