@@ -1,0 +1,7 @@
+create table twitter_user(
+    uid int not null primary key,
+    handle varchar(16) not null,
+    name varchar(50),
+    api_lookup_time int, -- unix timestamp
+    additional_metadata text
+);
