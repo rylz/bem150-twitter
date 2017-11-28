@@ -30,22 +30,22 @@ def get_user_names(uids):
 
     results = {uid: name or handle for uid, handle, name in c.fetchall()}
 
-    remaining_uids = set([int(uid) for uid in uids]).difference(set(results.keys()))
+    remaining_uids = list(set([int(uid) for uid in uids]).difference(set(results.keys())))
     if not remaining_uids:
         return results
 
-    # TODO make this work for more than 100 uids
     lookup_time = time.time()
-    users = api.UsersLookup(user_id=list(remaining_uids))
-    for u in users:
-        # danger will robinson!! injecting data from public api into db. TODO sanitize
-        insert_sql = """
-            INSERT INTO twitter_user VALUES ({}, '{}', '{}', {}, '{}')
-        """.format(u.id, u.screen_name, u.name.replace("'","''"), lookup_time, u.AsJsonString().replace("'","''"))
-        print(insert_sql)
-        c.execute(insert_sql)
+    BATCH_SIZE = 100
+    for i in range(0, len(remaining_uids), BATCH_SIZE):
+        users = api.UsersLookup(user_id=list(remaining_uids[i:i+BATCH_SIZE]))
+        for u in users:
+            # danger will robinson!! injecting data from public api into db. TODO sanitize
+            insert_sql = """
+                INSERT INTO twitter_user VALUES ({}, '{}', '{}', {}, '{}')
+            """.format(u.id, u.screen_name, u.name.replace("'","''"), lookup_time, u.AsJsonString().replace("'","''"))
+            c.execute(insert_sql)
 
-        results[u.id] = u.name or u.screen_name
+            results[u.id] = u.name or u.screen_name
 
     db_conn.commit()
     return results
