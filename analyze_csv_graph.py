@@ -25,12 +25,12 @@ OUTPUT_JSON = not args.verbose and args.json
 
 # argument to the script is a path to an adjacency list
 g = nx.read_adjlist(args.filename[0], create_using=nx.DiGraph())
-g_undirected = nx.read_adjlist(args.filename[0])
 
 if args.summary:
     ### printing a bunch of simple stats
     print('Number of nodes:', g.order())
     print('Number of edges:', g.size())
+    g_undirected = nx.read_adjlist(args.filename[0])
     connected_components = list(nx.connected_components(g_undirected))
     print('Number of connected components (ignoring direction):', len(connected_components))
     print('Size of connected components (ignoring direction):',
