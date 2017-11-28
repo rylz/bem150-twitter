@@ -21,14 +21,32 @@ def get_user_names(uids):
     Returns {uid: name} dictionary, with name falling back to the user's handle when not specified.
 
     """
+    full_data = _get_twitter_metadata(uids)
+    return {u: data[1] or data[0] for u, data in full_data.items()}
+
+
+def get_twitter_handles(uids):
+    """Gets and saves twitter metadata for given uids.
+
+    First tries the sqlite store for user metadata. Falls through to Twitter API for ground truth,
+    and saves results to sqlite.
+
+    Returns {uid: handle} dictionary.
+
+    """
+    full_data = _get_twitter_metadata(uids)
+    return {u: data[0] for u, data in full_data.items()}
+
+
+def _get_twitter_metadata(uids):
     sql = """
-        SELECT uid, handle, name FROM twitter_user
+        SELECT uid, handle, name, api_lookup_time, additional_metadata FROM twitter_user
         WHERE uid IN ({})
     """.format(','.join([str(uid) for uid in uids]))
     c = db_conn.cursor()
     c.execute(sql)
 
-    results = {uid: name or handle for uid, handle, name in c.fetchall()}
+    results = {uid: (handle, name, lookup_time, metadata) for uid, handle, name, lookup_time, metadata in c.fetchall()}
 
     remaining_uids = list(set([int(uid) for uid in uids]).difference(set(results.keys())))
     if not remaining_uids:
@@ -54,7 +72,7 @@ def get_user_names(uids):
             """.format(u.id, u.screen_name, u.name.replace("'","''"), lookup_time, u.AsJsonString().replace("'","''"))
             c.execute(insert_sql)
 
-            results[u.id] = u.name or u.screen_name
+            results[u.id] = (u.screen_name, u.name, lookup_time, u.AsJsonString())
 
     db_conn.commit()
     return results
