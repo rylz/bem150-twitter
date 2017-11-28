@@ -56,6 +56,16 @@ if args.centrality == 'degree':
         for uid in central_users:
             print(uid)
 
+if args.centrality == 'ncc':
+    centrality = list(analysis.ncc_centrality(g, in_degree=False).items())
+    centrality.sort(key=lambda t: t[1], reverse=True)
+    central_users = [uid for uid, _ in centrality[:args.nnodes]]
+    if OUTPUT_VERBOSE:
+        print('Most central users by betweenness centrality')
+    if not OUTPUT_JSON:
+        for uid in central_users:
+            print(uid)
+
 if args.centrality == 'betweenness':
     # NB: betweenness centrality takes exponential time to compute
     centrality = [(k, v) for k, v in nx.betweenness_centrality(g).items()]
