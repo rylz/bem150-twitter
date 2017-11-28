@@ -59,7 +59,7 @@ if args.centrality == 'degree':
             print(uid)
 
 if args.centrality == 'ncc':
-    centrality = list(analysis.ncc_centrality(g, in_degree=False).items())
+    centrality = analysis.ncc_centrality(g, in_degree=False)
     centrality.sort(key=lambda t: t[1], reverse=True)
     central_users = [uid for uid, _ in centrality[:args.nnodes]]
     if OUTPUT_VERBOSE:
