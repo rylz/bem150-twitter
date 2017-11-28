@@ -7,6 +7,8 @@ import networkx as nx
 import numpy
 import os.path
 
+import analysis
+
 # Command line parameters
 parser = argparse.ArgumentParser(description='Basic analysis for a graph given in CSV format')
 parser.add_argument('--summary', dest='summary', action='store_true', default=False)
@@ -52,6 +54,16 @@ if args.centrality == 'degree':
     central_users = [uid for uid, _ in centrality[:args.nnodes]]
     if OUTPUT_VERBOSE:
         print('Most central users by in-degree centrality')
+    if not OUTPUT_JSON:
+        for uid in central_users:
+            print(uid)
+
+if args.centrality == 'ncc':
+    centrality = analysis.ncc_centrality(g, in_degree=False)
+    centrality.sort(key=lambda t: t[1], reverse=True)
+    central_users = [uid for uid, _ in centrality[:args.nnodes]]
+    if OUTPUT_VERBOSE:
+        print('Most central users by betweenness centrality')
     if not OUTPUT_JSON:
         for uid in central_users:
             print(uid)
