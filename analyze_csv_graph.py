@@ -7,6 +7,8 @@ import networkx as nx
 import numpy
 import os.path
 
+import analysis
+
 # Command line parameters
 parser = argparse.ArgumentParser(description='Basic analysis for a graph given in CSV format')
 parser.add_argument('--summary', dest='summary', action='store_true', default=False)
