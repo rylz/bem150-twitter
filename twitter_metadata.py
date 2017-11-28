@@ -37,7 +37,16 @@ def get_user_names(uids):
     lookup_time = time.time()
     BATCH_SIZE = 100
     for i in range(0, len(remaining_uids), BATCH_SIZE):
-        users = api.UsersLookup(user_id=list(remaining_uids[i:i+BATCH_SIZE]))
+        try:
+            users = api.UsersLookup(user_id=list(remaining_uids[i:i+BATCH_SIZE]))
+        except twitter.TwitterError as e:
+            # for now, gracefully fail when the API fails (perhaps deleted accounts?)
+            # note that this will allow one bad uid to fail for an entire batch...
+            print("API failure for batch", e)
+            for u in remaining_uids:
+                results[u] = str(u)
+            continue
+
         for u in users:
             # danger will robinson!! injecting data from public api into db. TODO sanitize
             insert_sql = """
